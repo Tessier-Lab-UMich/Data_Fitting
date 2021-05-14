@@ -22,7 +22,7 @@ opf = fit_data(
     fig_size=(7.2, 6), #specifies figure size
     error_bars=False, #specifies wheter there are errorbars with the data
     markersize=15, #specifies size of data points
-    save_fig='Example_Graph.pdf', #file_name of saved graph.
+    save_fig='Example_Graph.png', #file_name of saved graph.
     colors=colors, #list of colors for each dataset
     face=colors, #list of colors for each datapoint face
     xlims=None, #specifies x axis limits
@@ -43,11 +43,11 @@ opa = fit_data(
     fig_size=(7.2, 6), #specifies figure size
     error_bars=True, #specifies wheter there are errorbars with the data
     markersize=15, #specifies size of data points
-    save_fig='Example_Graph_Averaged.pdf', #file_name of saved graph.
+    save_fig='Example_Graph_Averaged.png', #file_name of saved graph.
     colors=colors, #list of colors for each dataset
     face=colors, #list of colors for each datapoint face
     xlims=None, #specifies x axis limits
     ylims=None  #specifies y axis limits
 )
 ```
-![](Example_Graph_Averaged.pdf)
+![](Example_Graph_Averaged.png)
