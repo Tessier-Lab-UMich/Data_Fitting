@@ -43,6 +43,12 @@ def logistic(c, T, B, EC50):
 	'''
 	return c * (T-B) / (c + EC50) + B
 
+def bi_modal(T, p, mu1, s1, Fmax1, mu2, s2, Fmax2):
+    phi1 = Fmax1/(s1 * np.sqrt(2 * np.pi)) * np.exp(-1/2 * ((T - mu1) / s1) ** (2))
+    phi2 = Fmax2/(s2 * np.sqrt(2 * np.pi)) * np.exp(-1/2 * ((T - mu2) / s2) ** (2))
+    
+    return p * phi1 + (1 - p) * phi2
+
 def get_fitting_parameters(curve_function):
 	'''
 	get_fitting_parameters gets the names of the parameters of the curve you are trying to fit.
