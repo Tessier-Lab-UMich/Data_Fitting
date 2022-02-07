@@ -74,7 +74,7 @@ def get_fitting_parameters(curve_function):
 	
 	return params, output, stdev
 
-def get_data(data_excel):
+def get_data(data_excel, sheet_name = 'RAW DATA'):
 	'''
 	get_data retrieves the data to be fitted from data_excel.
 
@@ -113,7 +113,7 @@ def get_data(data_excel):
 			from data_excel:ERROR BAR
 	'''
 	#gets raw data from experiment file in sheet named RAW DATA
-	df = pd.read_excel(data_excel, sheet_name = 'RAW DATA', index_col = 0)
+	df = pd.read_excel(data_excel, sheet_name = sheet_name, index_col = 0)
 	#print(tabulate(df, headers = 'keys', tablefmt = 'latex'))
 
 	#gets axes label infor from AXES LABEL sheet
@@ -245,7 +245,7 @@ def graph_data(
 		axes.set_ylabel(axes_label[1])		
 
 def fit_data(
-	data_excel, curve_function, number_fit_points = 100, graph = True, bounds = None, 
+	data_excel, curve_function, number_fit_points = 100, sheet_name = 'RAW DATA', graph = True, bounds = None, 
 	log_x = False, fig_size = None, error_bars = False, markersize = 15, save_fig = None,
 	colors = None, face = None, xlims = None, ylims = None):
 	"""
@@ -321,9 +321,9 @@ def fit_data(
 	"""
 	params, output, stdev = get_fitting_parameters(curve_function)
 	if error_bars:
-		xdata, ydata, legends, axes_label, y_error = get_data(data_excel)
+		xdata, ydata, legends, axes_label, y_error = get_data(data_excel, sheet_name)
 	else:
-		xdata, ydata, legends, axes_label = get_data(data_excel)
+		xdata, ydata, legends, axes_label = get_data(data_excel, sheet_name)
 		y_error = None
 
 	if graph:
@@ -363,3 +363,93 @@ def fit_data(
 
 	print(tabulate(o_s, headers = 'keys', showindex=legends, tablefmt = 'latex_raw'))
 	return output, stdev
+
+def get_data_with_missing_values(data_excel, error_bars = False, sheet_name = 'RAW DATA'):
+	if error_bars:
+		xdata, ydata, legends, axes_label, y_error = get_data(data_excel, sheet_name)
+	else:
+		xdata, ydata, legends, axes_label = get_data(data_excel, sheet_name)
+		y_error = None
+	
+	fixed_data = {d:[] for d in legends}
+
+	for j, dataset in enumerate(ydata):
+		for i, d in enumerate(dataset):
+			if not pd.isna(d):
+				try:
+					fixed_data[legends[j]][0].append(xdata[i])
+					fixed_data[legends[j]][1].append(d)
+					if error_bars:
+						fixed_data[legends[j]][2].append(y_error[j][i])
+				except:
+					fixed_data[legends[j]] = [[xdata[i]], [d]]
+					if error_bars:
+						fixed_data[legends[j]].append([y_error[j][i]])
+
+	return fixed_data, legends, axes_label
+
+def fit_data_with_missing_values(
+	data_excel, curve_function, number_fit_points = 100, sheet_name = 'RAW DATA', graph = True, bounds = None, 
+	log_x = False, fig_size = None, error_bars = False, markersize = 15, save_fig = None,
+	colors = None, face = None, xlims = None, ylims = None):
+
+	params, output, stdev = get_fitting_parameters(curve_function)
+
+	if graph:
+		if fig_size is not None:
+			plt.rcParams.update({'font.size': 22})
+			fig = plt.figure(figsize = fig_size)
+			ax = fig.add_subplot(111)
+			
+		else:
+			fig = plt.figure()
+			ax = fig.add_subplot(111)
+
+	if error_bars:
+		fixed_data, legends, axes_label = get_data_with_missing_values(data_excel, sheet_name)
+	else:
+		fixed_data, legends, axes_label = get_data_with_missing_values(data_excel, sheet_name)
+		y_error = None
+
+
+	for i, (l, data) in enumerate(fixed_data.items()):
+		if bounds is not None:
+			popt, pcov = curve_fit(curve_function, data[0], data[1], bounds = bounds, maxfev=50000)
+		else:
+			popt, pcov = curve_fit(curve_function, data[0], data[1], maxfev=50000)
+
+		for j, p in enumerate(popt):
+			output[params[j]].append(p)
+			stdev[f'{params[j]} stdev'].append(np.sqrt(pcov[j,j])) #might need to verify that this is actually stdev...
+
+		if graph:
+			if error_bars:
+				y_error = data[2]
+			graph_data(ax, data[0], data[1], popt, legends, axes_label, curve_function, number_fit_points, i, log_x, colors, face, y_error, markersize, xlims, ylims)
+
+	if save_fig is not None:
+		plt.savefig(save_fig, dpi = 600, bbox_inches='tight')
+
+	if graph:
+		plt.show()
+
+	o_s = {}
+	for key in output.keys():
+		o_s[key] = []
+		for i in range(len(output[key])):
+			o_s[key].append('{} +/- {}'.format(round(output[key][i],3),round(stdev['{} stdev'.format(key)][i],3)))
+
+	print(tabulate(o_s, headers = 'keys', showindex=legends, tablefmt = 'latex_raw'))
+	return output, stdev
+
+
+def get_bar_graph_data(data_excel, sheet_name = 'BAR GRAPH'):
+	'''
+	'''
+	#gets raw data from experiment file in sheet named RAW DATA
+	df = pd.read_excel(data_excel, sheet_name = sheet_name, index_col = 0)
+	#print(tabulate(df, headers = 'keys', tablefmt = 'latex'))
+
+	#gets axes label infor from AXES LABEL sheet
+	df2 = pd.read_excel(data_excel, sheet_name = 'AXES LABEL')
+	axes_label = list(df2.columns)
