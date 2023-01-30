@@ -11,6 +11,7 @@ import matplotlib
 import numpy as np
 import pandas as pd
 from inspect import signature
+#from tabulate import tabulate
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import matplotlib.font_manager as fm
@@ -74,7 +75,7 @@ def get_fitting_parameters(curve_function):
 	
 	return params, output, stdev
 
-def get_data(data_excel, sheet_name = 'RAW DATA', error_bars = False):
+def get_data(data_excel, sheet_name = 'RAW DATA'):
 	'''
 	get_data retrieves the data to be fitted from data_excel.
 
@@ -114,18 +115,20 @@ def get_data(data_excel, sheet_name = 'RAW DATA', error_bars = False):
 	'''
 	#gets raw data from experiment file in sheet named RAW DATA
 	df = pd.read_excel(data_excel, sheet_name = sheet_name, index_col = 0)
+	#print(tabulate(df, headers = 'keys', tablefmt = 'latex'))
 
 	#gets axes label infor from AXES LABEL sheet
 	df2 = pd.read_excel(data_excel, sheet_name = 'AXES LABEL')
 	axes_label = list(df2.columns)
 
 	#gets error bars if they exist.
-	if error_bars:
-		df3 = pd.read_excel(data_excel, sheet_name = error_bars, index_col = 0)
+	try:
+		df3 = pd.read_excel(data_excel, sheet_name = 'ERROR BAR', index_col = 0)
+		#print(tabulate(df3, headers = 'keys', tablefmt = 'latex'))
 		y_error = []
 		for i in range(len(df3.columns)):
 			y_error.append(list(df3[df3.columns[i]]))
-	else:
+	except:
 		y_error = None
 
 	#generates x and y data as well as legends list
@@ -143,7 +146,9 @@ def get_data(data_excel, sheet_name = 'RAW DATA', error_bars = False):
 	else:
 		return xdata, ydata, legends, axes_label,
 
-def graph_data_old(axes, xdata, ydata, curve_function_parameters, legends, axes_label, curve_function, num_points, i, log_x, log_y, colors, face, y_error = None, markersize=15, xlims = None, ylims = None):
+def graph_data(
+	axes, xdata, ydata, curve_function_parameters, legends, axes_label, 
+	curve_function, num_points, i, log_x, log_y, colors, face, y_error = None, markersize=15, xlims = None, ylims = None):
 	'''
 	graph_data produces a graph of the data points entered in data_excel:RAW DATA with the fitted curve overlayed in the
 	same color.
@@ -240,7 +245,7 @@ def graph_data_old(axes, xdata, ydata, curve_function_parameters, legends, axes_
 		axes.set_xlabel(axes_label[0])
 		axes.set_ylabel(axes_label[1])		
 
-def fit_data_old(
+def fit_data(
 	data_excel, curve_function, number_fit_points = 100, sheet_name = 'RAW DATA', graph = True, bounds = None, 
 	log_x = False, log_y = False, fig_size = None, error_bars = False, markersize = 15, save_fig = None,
 	colors = None, face = None, xlims = None, ylims = None):
@@ -357,13 +362,14 @@ def fit_data_old(
 		for i in range(len(output[key])):
 			o_s[key].append('{} +/- {}'.format(round(output[key][i],3),round(stdev['{} stdev'.format(key)][i],3)))
 
+	#print(tabulate(o_s, headers = 'keys', showindex=legends, tablefmt = 'latex_raw'))
 	return output, stdev
 
 def get_data_with_missing_values(data_excel, error_bars = False, sheet_name = 'RAW DATA'):
 	if error_bars:
-		xdata, ydata, legends, axes_label, y_error = get_data(data_excel, sheet_name, error_bars)
+		xdata, ydata, legends, axes_label, y_error = get_data(data_excel, sheet_name)
 	else:
-		xdata, ydata, legends, axes_label = get_data(data_excel, sheet_name, error_bars)
+		xdata, ydata, legends, axes_label = get_data(data_excel, sheet_name)
 		y_error = None
 	
 	fixed_data = {d:[] for d in legends}
@@ -383,13 +389,13 @@ def get_data_with_missing_values(data_excel, error_bars = False, sheet_name = 'R
 
 	return fixed_data, legends, axes_label
 
-def fit_data(
+def fit_data_with_missing_values(
 	data_excel, curve_function, number_fit_points = 100, sheet_name = 'RAW DATA', graph = True, bounds = None, 
-	log_x = False, log_y = False, fig_size = None, error_bars = False, markersize = 15, save_fig = None,
+	log_x = False, fig_size = None, error_bars = False, markersize = 15, save_fig = None,
 	colors = None, face = None, xlims = None, ylims = None):
 
 	params, output, stdev = get_fitting_parameters(curve_function)
-	print(f'ERROR BARS {error_bars}')
+
 	if graph:
 		if fig_size is not None:
 			plt.rcParams.update({'font.size': 22})
@@ -401,11 +407,9 @@ def fit_data(
 			ax = fig.add_subplot(111)
 
 	if error_bars:
-		fixed_data, legends, axes_label = get_data_with_missing_values(data_excel, sheet_name = sheet_name, error_bars = error_bars)
-
+		fixed_data, legends, axes_label = get_data_with_missing_values(data_excel, sheet_name)
 	else:
-		print('No Error Bars')
-		fixed_data, legends, axes_label = get_data_with_missing_values(data_excel, sheet_name = sheet_name, error_bars = error_bars)
+		fixed_data, legends, axes_label = get_data_with_missing_values(data_excel, sheet_name)
 		y_error = None
 
 
@@ -422,7 +426,7 @@ def fit_data(
 		if graph:
 			if error_bars:
 				y_error = data[2]
-			graph_data(ax, data[0], data[1], popt, legends, axes_label, curve_function, number_fit_points, i, log_x, log_y, colors, face, y_error, markersize, xlims, ylims)
+			graph_data(ax, data[0], data[1], popt, legends, axes_label, curve_function, number_fit_points, i, log_x, colors, face, y_error, markersize, xlims, ylims)
 
 	if save_fig is not None:
 		plt.savefig(save_fig, dpi = 600, bbox_inches='tight')
@@ -436,6 +440,7 @@ def fit_data(
 		for i in range(len(output[key])):
 			o_s[key].append('{} +/- {}'.format(round(output[key][i],3),round(stdev['{} stdev'.format(key)][i],3)))
 
+	#print(tabulate(o_s, headers = 'keys', showindex=legends, tablefmt = 'latex_raw'))
 	return output, stdev
 
 
@@ -444,107 +449,8 @@ def get_bar_graph_data(data_excel, sheet_name = 'BAR GRAPH'):
 	'''
 	#gets raw data from experiment file in sheet named RAW DATA
 	df = pd.read_excel(data_excel, sheet_name = sheet_name, index_col = 0)
+	#print(tabulate(df, headers = 'keys', tablefmt = 'latex'))
 
 	#gets axes label infor from AXES LABEL sheet
 	df2 = pd.read_excel(data_excel, sheet_name = 'AXES LABEL')
 	axes_label = list(df2.columns)
-
-
-def graph_data(axes, xdata, ydata, curve_function_parameters, legends, axes_label, curve_function, num_points, i, log_x, log_y, colors, face, y_error = None, markersize=15, xlims = None, ylims = None):
-	'''
-	graph_data produces a graph of the data points entered in data_excel:RAW DATA with the fitted curve overlayed in the
-	same color.
-
-	input:
-		axes:
-			<class 'matplotlib.axes._subplots.AxesSubplot'> ax to plot data on
-		xdata:
-			<class 'list'> xdata list
-		ydata:
-			<class 'list'> ydata lists one for each set of ydata to plot
-		curve_function_parameters:
-			<class 'list'> parameter output from scipy.curve_fit
-		legends:
-			<class 'list'> list of names for each data being fit
-		axes_label:
-			<class 'list'> list of axis labels
-		curve_function:
-			<class 'function.> function that data is being fit to
-		num_points:
-			<class 'int'> number of points to use in the fitted curve. 
-			higher numbers will result in smoother curves
-		i:
-			<class 'int'> current index of which data is being plotted
-		log_x:
-			<class 'bool'> if True x-axis will be log scale.
-		colors:
-			<class 'list'> of color identifiers for plotting. 
-			for small number of curves being fit, < 11, 
-			[plt.get_cmap('tab10')(i) for i in range(10)] works well
-		face:
-			<class 'list'> of colors for marker face, sometimes no face color
-			is wanted so face will look like
-			['red', 'none', 'blue', 'none', ...]
-		y_error = None:
-			<class 'list'> of list of standard deviations for each dependent 
-			variable dataset.
-		markersize = 15:
-			<class 'int'> marker size in the graph.
-		xlims = None:
-			<class 'list'> [x_low, x_high] used to manually set x limits
-		ylims = None:
-			<class 'list'> [y_low, y_high] used to manually set y limits
-	'''
-	import matplotlib
-	fpath = '/Library/Fonts/Myriad Pro Regular.ttf'
-	if os.path.exists(fpath):
-		prop = fm.FontProperties(fname=fpath)
-		
-	if colors is None:
-		colors = [colorsys.hsv_to_rgb(x*1.0/(len(ydata)), 0.75, 0.75) for x in range((len(ydata)))]
-		print('set colors')
-	if face is None:
-		face = [color for color in colors]
-		print('set face color')
-	xdata_fit = np.linspace(xdata[0], xdata[-1], num_points)
-	ydata_fit = []
-
-
-	for t in xdata_fit:
-		ydata_fit.append(curve_function(t, *curve_function_parameters))
-	if log_x:
-		axes.set_xscale("log")
-	if log_y:
-		axes.set_yscale('log')
-		
-	axes.plot(xdata_fit, ydata_fit, color = colors[i], linewidth = 1)
-	if y_error is not None:
-		axes.errorbar(xdata, ydata,  y_error, fmt = '.', color = colors[i], markersize = markersize, capsize = 2, label = legends[i], markerfacecolor=face[i], ecolor = 'grey')
-	else:
-		axes.plot(xdata, ydata, '.', color = colors[i], markersize = markersize, label = legends[i], markerfacecolor=face[i])
-	
-	if xlims is not None:
-		axes.set_xlim(xlims)
-	if ylims is not None:
-		axes.set_ylim(ylims)
-
-	try:
-		axes.legend(loc=2, frameon = False, prop = lprop)#, bbox_to_anchor=(1, 0.5),)
-	except:
-		axes.legend(loc=2, frameon = False)#, bbox_to_anchor=(1, 0.5))
-
-	axes.xaxis.set_major_formatter(FormatStrFormatter('%g'))
-
-	#plt.grid(True)
-	try:
-		axes.set_xlabel(axes_label[0], fontproperties = prop)
-		axes.set_ylabel(axes_label[1], fontproperties = prop)
-		for tick in axes.get_xticklabels():
-			tick.set_fontproperties(prop)
-		for tick in axes.get_yticklabels():
-			tick.set_fontproperties(prop)
-	except:
-		axes.set_xlabel(axes_label[0])
-		axes.set_ylabel(axes_label[1])		
-
-
