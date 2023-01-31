@@ -10,7 +10,7 @@ This script will can take data saved in an excel file and produce graphs of the 
 def logistic(c, TOP, BOTTOM, EC50):
     return BOTTOM + (TOP - BOTTOM) * c / (c + EC50)
 
-colors = [plt.get_cmap('tab10')(i) for i in range(3)]
+colors = [plt.get_cmap('tab10')(i) for i in range(10)]
 
 opf = fit_data(
     data_excel = 'data_excel_example.xlsx', #Name of excel sheet or path to it.,
