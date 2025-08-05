@@ -55,4 +55,4 @@ opa = fit_data(
     ylims = None  #specifies y axis limits
 )
 ```
-![](Example_Graph_Averaged.png)
+![](docs/images/Example_Graph_Averaged.png)

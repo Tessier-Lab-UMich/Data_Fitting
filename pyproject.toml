@@ -1,0 +1,25 @@
+
+[project]
+name = "data_fitting"
+version = "0.1.0"
+authors = [
+	{ name = "Matthew D. Smith", email = "mduncans@umich.edu" }
+]
+description = "Curve fitting and visualization tools for Excel-based biological datasets"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+dependencies = [
+	"numpy",
+	"pandas",
+	"scipy",
+	"matplotlib",
+	"openpyxl"  # required for pandas to read Excel files
+]
+
+[project.urls]
+Homepage = "https://github.com/Tessier-Lab-Umich/Data_Fitting"
+
+[tool.setuptools]
+packages = ["data_fitting"]
+package-dir = {"" = "src"}
