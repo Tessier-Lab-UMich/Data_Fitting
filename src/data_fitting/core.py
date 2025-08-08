@@ -246,7 +246,7 @@ def graph_data(axes, xdata, ydata, curve_function_parameters, legends, axes_labe
 		axes_label:
 			<class 'list'> list of axis labels
 		curve_function:
-			<class 'function.> function that data is being fit to
+			<class 'function.> function that data is being fit to or None to suppress fitting
 		num_points:
 			<class 'int'> number of points to use in the fitted curve. 
 			higher numbers will result in smoother curves
@@ -274,6 +274,7 @@ def graph_data(axes, xdata, ydata, curve_function_parameters, legends, axes_labe
 	'''
 	import matplotlib
 	fpath = '/Library/Fonts/Myriad Pro Regular.ttf'
+	
 	if os.path.exists(fpath):
 		prop = fm.FontProperties(fname=fpath)
 		
@@ -283,18 +284,16 @@ def graph_data(axes, xdata, ydata, curve_function_parameters, legends, axes_labe
 	if face is None:
 		face = [color for color in colors]
 		print('set face color')
-	xdata_fit = np.linspace(xdata[0], xdata[-1], num_points)
-	ydata_fit = []
 
-
-	for t in xdata_fit:
-		ydata_fit.append(curve_function(t, *curve_function_parameters))
-	if log_x:
-		axes.set_xscale("log")
-	if log_y:
-		axes.set_yscale('log')
+	if curve_function is not None:
+		xdata_fit = np.linspace(xdata[0], xdata[-1], num_points)
+		ydata_fit = []
+	
+		for t in xdata_fit:
+			ydata_fit.append(curve_function(t, *curve_function_parameters))
+			
+		axes.plot(xdata_fit, ydata_fit, color = colors[i], linewidth = 1)
 		
-	axes.plot(xdata_fit, ydata_fit, color = colors[i], linewidth = 1)
 	if y_error is not None:
 		axes.errorbar(xdata, ydata,  y_error, fmt = '.', color = colors[i], markersize = markersize, capsize = 2, label = legends[i], markerfacecolor=face[i], ecolor = 'grey')
 	else:
@@ -311,7 +310,10 @@ def graph_data(axes, xdata, ydata, curve_function_parameters, legends, axes_labe
 		axes.legend(loc=2, frameon = False)#, bbox_to_anchor=(1, 0.5))
 
 	axes.xaxis.set_major_formatter(FormatStrFormatter('%g'))
-
+	if log_x:
+		axes.set_xscale("log")
+	if log_y:
+		axes.set_yscale('log')
 	#plt.grid(True)
 	try:
 		axes.set_xlabel(axes_label[0], fontproperties = prop)
