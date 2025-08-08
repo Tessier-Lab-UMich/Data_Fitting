@@ -9,18 +9,18 @@ from scipy.optimize import curve_fit
 import matplotlib.font_manager as fm
 from matplotlib.ticker import FormatStrFormatter
 
-#specify font properties for better export into adobe illustrator
+# Set font embedding type for Illustrator compatibility
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['ps.fonttype'] = 42
 
-#try and specify font to Myriad Pro. you may enter location of 
-#font file if you wish to use this. 
-try:
-	fpath = "/Library/Fonts/Myriad Pro Regular.ttf"
-	prop = fm.FontProperties(fname=fpath, size = 24)
-	lprop = fm.FontProperties(fname = fpath, size = 16)
-except:
-	pass
+# Try to load Myriad Pro, fallback to default
+MYRIAD_FONT_PATH = "/Library/Fonts/Myriad Pro Regular.ttf"
+if os.path.exists(MYRIAD_FONT_PATH):
+    default_prop = fm.FontProperties(fname=MYRIAD_FONT_PATH, size=24)
+    legend_prop = fm.FontProperties(fname=MYRIAD_FONT_PATH, size=16)
+else:
+    default_prop = fm.FontProperties(size=24)
+    legend_prop = fm.FontProperties(size=16)
 
 def logistic_HS(c, T, B, HS, EC50):
 	'''
