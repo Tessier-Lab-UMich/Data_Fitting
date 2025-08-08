@@ -227,7 +227,7 @@ def get_bar_graph_data(data_excel, sheet_name = 'BAR GRAPH'):
 	axes_label = list(df2.columns)
 
 
-def graph_data(axes, xdata, ydata, curve_function_parameters, legends, axes_label, curve_function, num_points, i, log_x, log_y, colors, face, y_error = None, markersize=15, xlims = None, ylims = None):
+def graph_data(axes, xdata, ydata, curve_function_parameters, legends, axes_label, curve_function, num_points, i, log_x, log_y, colors, face, y_error = None, markersize=15, xlims = None, ylims = None, fmt = '.'):
 	'''
 	graph_data produces a graph of the data points entered in data_excel:RAW DATA with the fitted curve overlayed in the
 	same color.
@@ -295,9 +295,9 @@ def graph_data(axes, xdata, ydata, curve_function_parameters, legends, axes_labe
 		axes.plot(xdata_fit, ydata_fit, color = colors[i], linewidth = 1)
 		
 	if y_error is not None:
-		axes.errorbar(xdata, ydata,  y_error, fmt = '.', color = colors[i], markersize = markersize, capsize = 2, label = legends[i], markerfacecolor=face[i], ecolor = 'grey')
+		axes.errorbar(xdata, ydata,  y_error, fmt = fmt, color = colors[i], markersize = markersize, capsize = 2, label = legends[i], markerfacecolor=face[i], ecolor = 'grey')
 	else:
-		axes.plot(xdata, ydata, '.', color = colors[i], markersize = markersize, label = legends[i], markerfacecolor=face[i])
+		axes.plot(xdata, ydata, fmt, color = colors[i], markersize = markersize, label = legends[i], markerfacecolor=face[i])
 	
 	if xlims is not None:
 		axes.set_xlim(xlims)
